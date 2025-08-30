@@ -8,35 +8,55 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 27% 8%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 222 15% 12%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 222 15% 12%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 271 81% 56%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 215 27% 17%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 27% 17%;
+    --muted-foreground: 217 10% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 142 76% 36%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 63% 51%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 215 27% 17%;
+    --input: 215 27% 17%;
+    --ring: 271 81% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Game-specific tokens */
+    --gold: 45 93% 58%;
+    --gold-glow: 45 100% 70%;
+    --souls: 271 81% 56%;
+    --souls-glow: 271 100% 80%;
+    --xp-green: 142 76% 36%;
+    --danger-red: 0 84% 60%;
+    --warning-orange: 25 95% 53%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(271 81% 56%), hsl(220 100% 70%));
+    --gradient-gold: linear-gradient(135deg, hsl(45 93% 58%), hsl(35 100% 65%));
+    --gradient-souls: linear-gradient(135deg, hsl(271 81% 56%), hsl(290 100% 70%));
+    --gradient-bg: linear-gradient(135deg, hsl(220 27% 8%), hsl(215 25% 12%));
+    
+    /* Shadows */
+    --shadow-glow: 0 0 30px hsl(271 81% 56% / 0.5);
+    --shadow-gold: 0 0 20px hsl(45 93% 58% / 0.4);
+    --shadow-intense: 0 10px 40px hsl(220 27% 8% / 0.8);
 
     --sidebar-background: 0 0% 98%;
 
