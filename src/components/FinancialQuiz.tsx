@@ -225,37 +225,39 @@ const FinancialQuiz: React.FC = () => {
   if (gameState === 'start') {
     return (
       <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
-        <Card className="max-w-2xl w-full p-8 text-center bg-card/90 backdrop-blur-sm border-primary/20">
+        <Card className="max-w-2xl w-full p-4 sm:p-6 md:p-8 text-center bg-card/90 backdrop-blur-sm border-primary/20">
           <div className="animate-bounce-in">
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-souls bg-clip-text text-transparent mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-souls bg-clip-text text-transparent mb-4">
               Gold Quest Academy
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8">
               Teste seus conhecimentos sobre o jogo da vida financeira!
             </p>
             
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="flex flex-col items-center p-4 bg-secondary/50 rounded-lg">
-                <Coins className="w-8 h-8 text-gold mb-2" />
-                <span className="text-sm font-medium">10 Questões</span>
+            {/* Mobile: Stack vertically below 768px */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+              <div className="flex flex-col items-center p-3 sm:p-4 bg-secondary/50 rounded-lg min-h-[80px]">
+                <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-gold mb-2" />
+                <span className="text-xs sm:text-sm font-medium">10 Questões</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-secondary/50 rounded-lg">
-                <Zap className="w-8 h-8 text-souls mb-2" />
-                <span className="text-sm font-medium">Souls para coletar</span>
+              <div className="flex flex-col items-center p-3 sm:p-4 bg-secondary/50 rounded-lg min-h-[80px]">
+                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-souls mb-2" />
+                <span className="text-xs sm:text-sm font-medium">Souls para coletar</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-secondary/50 rounded-lg">
-                <Trophy className="w-8 h-8 text-xp-green mb-2" />
-                <span className="text-sm font-medium">Rankings</span>
+              <div className="flex flex-col items-center p-3 sm:p-4 bg-secondary/50 rounded-lg min-h-[80px]">
+                <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-xp-green mb-2" />
+                <span className="text-xs sm:text-sm font-medium">Rankings</span>
               </div>
             </div>
             
+            {/* Full width CTA below 480px */}
             <Button 
               onClick={startGame}
               variant="default"
               size="lg"
-              className="bg-gradient-primary hover:bg-gradient-souls shadow-glow animate-glow-pulse text-lg px-8 py-6"
+              className="w-full sm:w-auto bg-gradient-primary hover:bg-gradient-souls shadow-glow animate-glow-pulse text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]"
             >
-              <Target className="w-5 h-5 mr-2" />
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Iniciar Quest Financeira
             </Button>
           </div>
@@ -268,49 +270,51 @@ const FinancialQuiz: React.FC = () => {
     const rank = getRank();
     return (
       <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
-        <Card className="max-w-2xl w-full p-8 text-center bg-card/90 backdrop-blur-sm border-primary/20">
+        <Card className="max-w-2xl w-full p-4 sm:p-6 md:p-8 text-center bg-card/90 backdrop-blur-sm border-primary/20">
           <div className="animate-bounce-in">
-            <Trophy className="w-16 h-16 text-gold mx-auto mb-4 animate-gold-shine" />
-            <h2 className="text-3xl font-bold mb-4">Quest Completa!</h2>
+            <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-gold mx-auto mb-4 animate-gold-shine" />
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Quest Completa!</h2>
             
-            <div className="bg-secondary/50 rounded-lg p-6 mb-6">
+            <div className="bg-secondary/50 rounded-lg p-4 sm:p-6 mb-6">
               <div className="flex items-center justify-center mb-4">
-                <Coins className="w-8 h-8 text-gold mr-2" />
-                <span className="text-3xl font-bold text-gold">{totalSouls}</span>
-                <span className="text-lg text-muted-foreground ml-2">Souls</span>
+                <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-gold mr-2" />
+                <span className="text-2xl sm:text-3xl font-bold text-gold">{totalSouls}</span>
+                <span className="text-sm sm:text-lg text-muted-foreground ml-2">Souls</span>
               </div>
               
-              <h3 className={`text-xl font-bold ${rank.color} mb-2`}>
+              <h3 className={`text-lg sm:text-xl font-bold ${rank.color} mb-2`}>
                 {rank.title}
               </h3>
               
               <Progress 
                 value={(totalSouls / 2500) * 100} 
-                className="h-3 bg-secondary"
+                className="h-2 sm:h-3 bg-secondary"
               />
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 {totalSouls}/2500 Souls para o próximo nível
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-secondary/30 rounded-lg p-4">
-                <Star className="w-6 h-6 text-xp-green mx-auto mb-2" />
-                <div className="text-lg font-bold">{questions.filter((q, i) => answeredQuestions[i]).length}</div>
-                <div className="text-sm text-muted-foreground">Questões</div>
+            {/* Mobile: Stack stats vertically below 480px */}
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4 mb-6">
+              <div className="bg-secondary/30 rounded-lg p-3 sm:p-4 min-h-[80px] flex flex-col justify-center">
+                <Star className="w-5 h-5 sm:w-6 sm:h-6 text-xp-green mx-auto mb-2" />
+                <div className="text-base sm:text-lg font-bold">{questions.filter((q, i) => answeredQuestions[i]).length}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Questões</div>
               </div>
-              <div className="bg-secondary/30 rounded-lg p-4">
-                <Zap className="w-6 h-6 text-souls mx-auto mb-2" />
-                <div className="text-lg font-bold">{Math.round((totalSouls / (questions.reduce((acc, q) => acc + q.souls, 0))) * 100)}%</div>
-                <div className="text-sm text-muted-foreground">Eficiência</div>
+              <div className="bg-secondary/30 rounded-lg p-3 sm:p-4 min-h-[80px] flex flex-col justify-center">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-souls mx-auto mb-2" />
+                <div className="text-base sm:text-lg font-bold">{Math.round((totalSouls / (questions.reduce((acc, q) => acc + q.souls, 0))) * 100)}%</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Eficiência</div>
               </div>
             </div>
             
+            {/* Full width CTA */}
             <Button 
               onClick={restartGame}
               variant="default"
               size="lg"
-              className="bg-gradient-primary hover:bg-gradient-souls shadow-glow w-full"
+              className="w-full bg-gradient-primary hover:bg-gradient-souls shadow-glow text-base sm:text-lg px-6 py-4 min-h-[48px]"
             >
               Nova Quest
             </Button>
@@ -321,40 +325,41 @@ const FinancialQuiz: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-bg p-4">
+    <div className="min-h-screen bg-gradient-bg p-3 sm:p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
-            <Coins className="w-8 h-8 text-gold animate-gold-shine" />
-            <span className="text-2xl font-bold text-gold">{totalSouls}</span>
-            <span className="text-sm text-muted-foreground">Souls</span>
+        {/* Mobile-optimized Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-gold animate-gold-shine" />
+            <span className="text-xl sm:text-2xl font-bold text-gold">{totalSouls}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">Souls</span>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">Questão</span>
-            <span className="text-lg font-bold">{currentQuestion + 1}</span>
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <span className="text-xs sm:text-sm text-muted-foreground">Questão</span>
+            <span className="text-base sm:text-lg font-bold">{currentQuestion + 1}</span>
             <span className="text-muted-foreground">/</span>
-            <span className="text-lg">{questions.length}</span>
+            <span className="text-base sm:text-lg">{questions.length}</span>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Progress 
             value={progress} 
-            className="h-3 bg-secondary"
+            className="h-2 sm:h-3 bg-secondary"
           />
-          <p className="text-sm text-muted-foreground mt-2 text-center">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-2 text-center">
             Progresso da Quest: {Math.round(progress)}%
           </p>
         </div>
 
-        {/* Question Card */}
-        <Card className="p-8 bg-card/90 backdrop-blur-sm border-primary/20 animate-slide-up">
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+        {/* Question Card - Reduced padding on mobile */}
+        <Card className="p-4 sm:p-6 md:p-8 bg-card/90 backdrop-blur-sm border-primary/20 animate-slide-up">
+          <div className="mb-4 sm:mb-6">
+            {/* Category and souls - Stack on very small screens */}
+            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 xs:gap-0 mb-3 sm:mb-4">
+              <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-bold ${
                 currentQ.category === 'money' ? 'bg-souls/20 text-souls-glow' :
                 currentQ.category === 'income' ? 'bg-gold/20 text-gold-glow' :
                 'bg-xp-green/20 text-xp-green'
@@ -364,24 +369,25 @@ const FinancialQuiz: React.FC = () => {
               </span>
               
               <div className="flex items-center space-x-1">
-                <Coins className="w-4 h-4 text-gold" />
-                <span className="text-sm font-bold text-gold">+{currentQ.souls}</span>
+                <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-gold" />
+                <span className="text-xs sm:text-sm font-bold text-gold">+{currentQ.souls}</span>
               </div>
             </div>
             
-            <h2 className="text-xl md:text-2xl font-bold text-foreground leading-relaxed">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground leading-relaxed">
               {currentQ.question}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Answer buttons - Always stack on mobile */}
+          <div className="grid grid-cols-1 gap-3 sm:gap-4">
             {currentQ.options.map((option, index) => (
               <Button
                 key={index}
                 variant="outline"
                 onClick={() => handleAnswer(index)}
                 disabled={showResult}
-                className={`p-4 h-auto text-left justify-start transition-all duration-300 ${
+                className={`p-3 sm:p-4 h-auto text-left justify-start transition-all duration-300 min-h-[48px] ${
                   showResult ? 
                     index === currentQ.correct ? 
                       'bg-xp-green/20 border-xp-green text-xp-green' :
@@ -391,7 +397,7 @@ const FinancialQuiz: React.FC = () => {
                     'hover:bg-primary/10 hover:border-primary hover:shadow-glow'
                 }`}
               >
-                <span className="text-base font-medium leading-relaxed">
+                <span className="text-sm sm:text-base font-medium leading-relaxed">
                   {option}
                 </span>
               </Button>
@@ -399,18 +405,18 @@ const FinancialQuiz: React.FC = () => {
           </div>
 
           {showResult && (
-            <div className="mt-6 p-4 rounded-lg animate-bounce-in">
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg animate-bounce-in">
               {selectedAnswer === currentQ.correct ? (
-                <div className="bg-xp-green/10 border border-xp-green/30 rounded-lg p-4">
-                  <h3 className="font-bold text-xp-green mb-2">🎉 Correto!</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="bg-xp-green/10 border border-xp-green/30 rounded-lg p-3 sm:p-4">
+                  <h3 className="font-bold text-xp-green mb-2 text-sm sm:text-base">🎉 Correto!</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Você coletou {currentQ.souls} Souls! Continue assim, guerreiro!
                   </p>
                 </div>
               ) : (
-                <div className="bg-danger-red/10 border border-danger-red/30 rounded-lg p-4">
-                  <h3 className="font-bold text-danger-red mb-2">💀 Incorreto!</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="bg-danger-red/10 border border-danger-red/30 rounded-lg p-3 sm:p-4">
+                  <h3 className="font-bold text-danger-red mb-2 text-sm sm:text-base">💀 Incorreto!</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     A resposta correta era: <span className="font-bold text-xp-green">{currentQ.options[currentQ.correct]}</span>
                   </p>
                 </div>
