@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { Coins, Trophy, Zap, Target, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Question {
   id: number;
@@ -13,6 +15,13 @@ interface Question {
   category: 'money' | 'income' | 'expenses';
   difficulty: 1 | 2 | 3 | 4 | 5;
   souls: number;
+}
+
+interface QuizScore {
+  id: string;
+  player_name: string;
+  score: number;
+  completed_at: string;
 }
 
 const questions: Question[] = [
@@ -162,9 +171,12 @@ const FinancialQuiz: React.FC = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [totalSouls, setTotalSouls] = useState(0);
-  const [gameState, setGameState] = useState<'start' | 'playing' | 'finished'>('start');
+  const [gameState, setGameState] = useState<'start' | 'playing' | 'finished' | 'ranking'>('start');
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(new Array(questions.length).fill(false));
   const [showResult, setShowResult] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [ranking, setRanking] = useState<QuizScore[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const currentQ = questions[currentQuestion];
@@ -191,15 +203,49 @@ const FinancialQuiz: React.FC = () => {
       });
     }
     
-    setTimeout(() => {
+    setTimeout(async () => {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(prev => prev + 1);
         setSelectedAnswer(null);
         setShowResult(false);
       } else {
-        setGameState('finished');
+        await saveScore();
+        setGameState('ranking');
       }
     }, 2000);
+  };
+
+  const saveScore = async () => {
+    if (!playerName.trim()) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('quiz_scores')
+        .insert([
+          {
+            player_name: playerName.trim(),
+            score: totalSouls
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "🏆 Pontuação Salva!",
+        description: "Seu resultado foi adicionado ao ranking!",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error saving score:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Falha ao salvar pontuação. Tente novamente.",
+        duration: 3000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const restartGame = () => {
@@ -208,11 +254,66 @@ const FinancialQuiz: React.FC = () => {
     setTotalSouls(0);
     setGameState('start');
     setShowResult(false);
+    setPlayerName("");
   };
 
   const startGame = () => {
-    setGameState('playing');
+    if (playerName.trim()) {
+      setGameState('playing');
+    } else {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, digite seu nome para começar!",
+        duration: 2000,
+      });
+    }
   };
+
+  const loadRanking = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('quiz_scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .order('completed_at', { ascending: true });
+
+      if (error) throw error;
+      setRanking(data || []);
+    } catch (error) {
+      console.error('Error loading ranking:', error);
+    }
+  };
+
+  // Load ranking when component mounts and set up realtime subscription
+  useEffect(() => {
+    loadRanking();
+
+    const channel = supabase
+      .channel('quiz-ranking')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'quiz_scores'
+        },
+        () => {
+          loadRanking();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Load ranking when entering ranking screen
+  useEffect(() => {
+    if (gameState === "ranking") {
+      loadRanking();
+    }
+  }, [gameState]);
 
   const getRank = () => {
     if (totalSouls >= 2000) return { title: "💎 Mestre das Finanças", color: "text-souls-glow" };
@@ -233,6 +334,23 @@ const FinancialQuiz: React.FC = () => {
             <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8">
               Teste seus conhecimentos sobre o jogo da vida financeira!
             </p>
+            
+            <div className="space-y-4 mb-6">
+              <div className="text-center">
+                <label htmlFor="playerName" className="block text-lg font-semibold text-primary mb-2">
+                  Digite seu nome para começar:
+                </label>
+                <Input
+                  id="playerName"
+                  type="text"
+                  placeholder="Seu nome aqui..."
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  className="text-center text-lg bg-secondary/50 border-primary/30"
+                  onKeyPress={(e) => e.key === 'Enter' && startGame()}
+                />
+              </div>
+            </div>
             
             {/* Mobile: Stack vertically below 768px */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
@@ -256,10 +374,93 @@ const FinancialQuiz: React.FC = () => {
               variant="default"
               size="lg"
               className="w-full sm:w-auto bg-gradient-primary hover:bg-gradient-souls shadow-glow animate-glow-pulse text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 min-h-[48px]"
+              disabled={!playerName.trim()}
             >
               <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Iniciar Quest Financeira
             </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (gameState === 'ranking') {
+    const currentPlayerRank = ranking.findIndex(score => 
+      score.player_name === playerName && 
+      Math.abs(score.score - totalSouls) < 10 && 
+      Date.now() - new Date(score.completed_at).getTime() < 60000
+    ) + 1;
+    
+    return (
+      <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl p-4 sm:p-6 md:p-8 bg-card/90 backdrop-blur-sm border-primary/20">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+              <Trophy className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-souls bg-clip-text text-transparent">
+              🏆 Ranking ao Vivo
+            </h1>
+            {currentPlayerRank > 0 && (
+              <p className="text-lg text-primary">
+                <span className="font-bold">{playerName}</span>, você ficou em <span className="font-bold text-gold">#{currentPlayerRank}</span> com {totalSouls} Souls!
+              </p>
+            )}
+          </div>
+          
+          <div className="mt-8 space-y-6">
+            <div className="max-h-96 overflow-y-auto">
+              {ranking.length === 0 ? (
+                <p className="text-center text-muted-foreground">Carregando ranking...</p>
+              ) : (
+                <div className="space-y-2">
+                  {ranking.map((score, index) => (
+                    <div 
+                      key={score.id}
+                      className={`flex items-center justify-between p-3 sm:p-4 rounded-lg transition-all ${
+                        score.player_name === playerName && 
+                        Math.abs(score.score - totalSouls) < 10 && 
+                        Date.now() - new Date(score.completed_at).getTime() < 60000
+                          ? 'bg-gradient-to-r from-primary/20 to-gold/20 border-2 border-gold/50'
+                          : 'bg-secondary/50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <span className={`text-xl sm:text-2xl font-bold ${
+                          index === 0 ? 'text-gold' :
+                          index === 1 ? 'text-gray-400' :
+                          index === 2 ? 'text-orange-400' :
+                          'text-muted-foreground'
+                        }`}>
+                          #{index + 1}
+                        </span>
+                        <span className="text-lg sm:text-xl font-semibold text-foreground">
+                          {score.player_name}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg sm:text-xl font-bold text-gold">
+                          {score.score}
+                        </span>
+                        <span className="text-muted-foreground">Souls</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-center">
+              <Button 
+                onClick={restartGame}
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-primary hover:bg-gradient-souls shadow-glow text-base sm:text-lg px-6 py-4 min-h-[48px]"
+              >
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Jogar Novamente
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
