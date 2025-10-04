@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { Coins, Trophy, Zap, Target, Star } from 'lucide-react';
+import { Coins, Trophy, Zap, Target, Star, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Question {
-  id: number;
+  id: string;
   question: string;
   options: string[];
-  correct: number;
+  correct_index: number;
   category: 'money' | 'income' | 'expenses';
   difficulty: 1 | 2 | 3 | 4 | 5;
   souls: number;
+  order_position: number;
 }
 
 interface QuizScore {
@@ -24,155 +26,16 @@ interface QuizScore {
   completed_at: string;
 }
 
-const questions: Question[] = [
-  {
-    id: 1,
-    question: "O que é dinheiro na analogia de um jogo Souls-like?",
-    options: [
-      "Apenas papel sem valor",
-      "Souls/XP que você coleta para evoluir seu personagem",
-      "Um item cosmético",
-      "Uma arma especial"
-    ],
-    correct: 1,
-    category: 'money',
-    difficulty: 1,
-    souls: 100
-  },
-  {
-    id: 2,
-    question: "Qual a principal diferença entre dinheiro físico e digital?",
-    options: [
-      "Dinheiro digital não tem valor real",
-      "Dinheiro físico é mais seguro",
-      "Praticidade vs. tangibilidade, ambos têm valor",
-      "Não há diferença"
-    ],
-    correct: 2,
-    category: 'money',
-    difficulty: 2,
-    souls: 200
-  },
-  {
-    id: 3,
-    question: "Na analogia gamer, o que representa o 'farm de gold'?",
-    options: [
-      "Gastar dinheiro rapidamente",
-      "Diferentes formas de ganhar renda",
-      "Economizar dinheiro",
-      "Investir em ações"
-    ],
-    correct: 1,
-    category: 'income',
-    difficulty: 2,
-    souls: 200
-  },
-  {
-    id: 4,
-    question: "Qual destes é um exemplo de 'quest diária' para gerar renda?",
-    options: [
-      "Dormir até tarde",
-      "Pequenos trabalhos ou responsabilidades regulares",
-      "Assistir TV",
-      "Jogar videogame"
-    ],
-    correct: 1,
-    category: 'income',
-    difficulty: 1,
-    souls: 150
-  },
-  {
-    id: 5,
-    question: "Gastos fixos em um RPG seriam como:",
-    options: [
-      "Compras de poções ocasionais",
-      "Aluguel de um local para guardar itens todo mês",
-      "Drops aleatórios",
-      "Bônus especiais"
-    ],
-    correct: 1,
-    category: 'expenses',
-    difficulty: 2,
-    souls: 200
-  },
-  {
-    id: 6,
-    question: "Qual item seria considerado 'essencial' vs 'cosmético'?",
-    options: [
-      "Roupas de marca são essenciais",
-      "Comida é cosmética, roupas são essenciais",
-      "Comida é essencial, roupas de marca são cosméticas",
-      "Tudo é cosmético"
-    ],
-    correct: 2,
-    category: 'expenses',
-    difficulty: 3,
-    souls: 300
-  },
-  {
-    id: 7,
-    question: "Como o PIX se relaciona com a evolução do dinheiro?",
-    options: [
-      "É apenas uma moda passageira",
-      "Representa a evolução digital do dinheiro, como upgrade de equipamento",
-      "É inferior ao dinheiro físico",
-      "Não tem relação com dinheiro real"
-    ],
-    correct: 1,
-    category: 'money',
-    difficulty: 3,
-    souls: 300
-  },
-  {
-    id: 8,
-    question: "Que tipo de 'drop raro' representaria um presente inesperado?",
-    options: [
-      "Salário mensal",
-      "Mesada regular",
-      "Dinheiro de aniversário",
-      "Pagamento de trabalho fixo"
-    ],
-    correct: 2,
-    category: 'income',
-    difficulty: 2,
-    souls: 250
-  },
-  {
-    id: 9,
-    question: "Gastos que 'drenam sua stamina' rapidamente seriam:",
-    options: [
-      "Compras planejadas e necessárias",
-      "Gastos impulsivos e desnecessários",
-      "Investimentos em educação",
-      "Poupança mensal"
-    ],
-    correct: 1,
-    category: 'expenses',
-    difficulty: 3,
-    souls: 350
-  },
-  {
-    id: 10,
-    question: "O que representa uma 'Bonfire' no contexto financeiro?",
-    options: [
-      "Local onde você gasta todo seu dinheiro",
-      "Ponto de descanso onde você deposita dinheiro para não perder",
-      "Lugar para emprestar dinheiro",
-      "Local de trabalho"
-    ],
-    correct: 1,
-    category: 'money',
-    difficulty: 4,
-    souls: 400
-  }
-];
+// Questions will be loaded from database
 
 const FinancialQuiz: React.FC = () => {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [totalSouls, setTotalSouls] = useState(0);
   const [gameState, setGameState] = useState<'start' | 'playing' | 'finished' | 'ranking'>('start');
-  const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(new Array(questions.length).fill(false));
+  const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [ranking, setRanking] = useState<QuizScore[]>([]);
@@ -180,13 +43,72 @@ const FinancialQuiz: React.FC = () => {
   const { toast } = useToast();
 
   const currentQ = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
+
+  // Load questions from database
+  const loadQuestions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .order('order_position', { ascending: true });
+
+      if (error) throw error;
+      
+      const formattedQuestions: Question[] = (data || []).map(q => ({
+        id: q.id,
+        question: q.question,
+        options: Array.isArray(q.options) ? q.options : JSON.parse(q.options as string),
+        correct_index: q.correct_index,
+        category: q.category as 'money' | 'income' | 'expenses',
+        difficulty: q.difficulty as 1 | 2 | 3 | 4 | 5,
+        souls: q.souls,
+        order_position: q.order_position,
+      }));
+      
+      setQuestions(formattedQuestions);
+      setAnsweredQuestions(new Array(formattedQuestions.length).fill(false));
+    } catch (error) {
+      console.error('Error loading questions:', error);
+      toast({
+        title: 'Erro ao carregar perguntas',
+        description: 'Não foi possível carregar as perguntas do quiz',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingQuestions(false);
+    }
+  };
+
+  // Load questions and set up realtime updates
+  useEffect(() => {
+    loadQuestions();
+
+    const channel = supabase
+      .channel('questions-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'questions'
+        },
+        () => {
+          loadQuestions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleAnswer = (answerIndex: number) => {
     setSelectedAnswer(answerIndex);
     setShowResult(true);
     
-    const isCorrect = answerIndex === currentQ.correct;
+    const isCorrect = answerIndex === currentQ.correct_index;
     
     if (isCorrect) {
       setTotalSouls(prev => prev + currentQ.souls);
@@ -255,6 +177,7 @@ const FinancialQuiz: React.FC = () => {
     setGameState('start');
     setShowResult(false);
     setPlayerName("");
+    setAnsweredQuestions(new Array(questions.length).fill(false));
   };
 
   const startGame = () => {
@@ -323,9 +246,42 @@ const FinancialQuiz: React.FC = () => {
     return { title: "🌟 Iniciante Corajoso", color: "text-foreground" };
   };
 
+  // Show loading state while questions are being fetched
+  if (isLoadingQuestions) {
+    return (
+      <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg text-muted-foreground">Carregando perguntas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no questions available
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
+        <Card className="max-w-2xl w-full p-8 text-center bg-card/90 backdrop-blur-sm border-primary/20">
+          <h2 className="text-2xl font-bold mb-4">Nenhuma pergunta disponível</h2>
+          <p className="text-muted-foreground">
+            O quiz ainda não possui perguntas cadastradas. Entre em contato com o administrador.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   if (gameState === 'start') {
     return (
       <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
+        <Link 
+          to="/admin-login" 
+          className="fixed top-4 right-4 p-2 rounded-full bg-card/50 hover:bg-card/80 backdrop-blur-sm border border-border/50 transition-all z-50"
+          aria-label="Admin"
+        >
+          <Shield className="w-5 h-5 text-muted-foreground" />
+        </Link>
         <Card className="max-w-2xl w-full p-4 sm:p-6 md:p-8 text-center bg-card/90 backdrop-blur-sm border-primary/20">
           <div className="animate-bounce-in">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-souls bg-clip-text text-transparent mb-4">
@@ -356,7 +312,9 @@ const FinancialQuiz: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
               <div className="flex flex-col items-center p-3 sm:p-4 bg-secondary/50 rounded-lg min-h-[80px]">
                 <Coins className="w-6 h-6 sm:w-8 sm:h-8 text-gold mb-2" />
-                <span className="text-xs sm:text-sm font-medium">10 Questões</span>
+                <span className="text-xs sm:text-sm font-medium break-words text-center">
+                  {questions.length} {questions.length === 1 ? 'Questão' : 'Questões'}
+                </span>
               </div>
               <div className="flex flex-col items-center p-3 sm:p-4 bg-secondary/50 rounded-lg min-h-[80px]">
                 <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-souls mb-2" />
@@ -590,7 +548,7 @@ const FinancialQuiz: React.FC = () => {
                 disabled={showResult}
                 className={`p-3 sm:p-4 h-auto text-left justify-start transition-all duration-300 min-h-[48px] ${
                   showResult ? 
-                    index === currentQ.correct ? 
+                    index === currentQ.correct_index ? 
                       'bg-xp-green/20 border-xp-green text-xp-green' :
                       selectedAnswer === index ?
                         'bg-danger-red/20 border-danger-red text-danger-red' :
@@ -607,7 +565,7 @@ const FinancialQuiz: React.FC = () => {
 
           {showResult && (
             <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg animate-bounce-in">
-              {selectedAnswer === currentQ.correct ? (
+              {selectedAnswer === currentQ.correct_index ? (
                 <div className="bg-xp-green/10 border border-xp-green/30 rounded-lg p-3 sm:p-4">
                   <h3 className="font-bold text-xp-green mb-2 text-sm sm:text-base">🎉 Correto!</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
@@ -618,7 +576,7 @@ const FinancialQuiz: React.FC = () => {
                 <div className="bg-danger-red/10 border border-danger-red/30 rounded-lg p-3 sm:p-4">
                   <h3 className="font-bold text-danger-red mb-2 text-sm sm:text-base">💀 Incorreto!</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    A resposta correta era: <span className="font-bold text-xp-green">{currentQ.options[currentQ.correct]}</span>
+                    A resposta correta era: <span className="font-bold text-xp-green">{currentQ.options[currentQ.correct_index]}</span>
                   </p>
                 </div>
               )}
